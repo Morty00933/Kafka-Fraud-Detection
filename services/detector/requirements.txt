@@ -1,0 +1,12 @@
+fastapi==0.114.0
+uvicorn[standard]==0.30.6
+aiokafka==0.10.0
+redis==5.0.8
+SQLAlchemy[asyncio]==2.0.34
+asyncpg==0.29.0
+prometheus-client==0.20.0
+pydantic==2.9.2
+
+# ML
+scikit-learn==1.5.2
+numpy>=1.26

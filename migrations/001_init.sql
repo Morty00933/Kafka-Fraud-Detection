@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS fraud_alerts (
+  id BIGSERIAL PRIMARY KEY,
+  tx_id VARCHAR(64) UNIQUE NOT NULL,
+  user_id BIGINT NOT NULL,
+  amount NUMERIC(12,2) NOT NULL,
+  location VARCHAR(64) NOT NULL,
+  ts TIMESTAMPTZ NOT NULL,
+  score DOUBLE PRECISION NOT NULL,
+  reason TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_fraud_alerts_user_ts ON fraud_alerts(user_id, ts);
