@@ -1,0 +1,146 @@
+# -- Global settings
+global:
+  imagePullPolicy: IfNotPresent
+
+# -- Detector service (fraud detection consumer + API)
+detector:
+  replicaCount: 1
+  image:
+    repository: kafkafrauddetection-detector
+    tag: latest
+    pullPolicy: IfNotPresent
+  ports:
+    api: 8080
+    prometheus: 9000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 2Gi
+  env:
+    kafkaBootstrap: redpanda:9092
+    topicTransactions: transactions.v1
+    groupId: fraud-detector
+    host: "0.0.0.0"
+    port: "8080"
+    prometheusPort: "9000"
+    modelStrategy: iforest
+    ifContamination: "0.02"
+    ifTrees: "200"
+    ifRetrainEvery: "2000"
+    ifBufferMax: "50000"
+
+# -- Producer service (transaction generator)
+producer:
+  replicaCount: 1
+  image:
+    repository: kafkafrauddetection-producer
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  env:
+    kafkaBootstrap: redpanda:9092
+    topicTransactions: transactions.v1
+    ratePerSec: "50"
+
+# -- API service (REST API)
+api:
+  replicaCount: 1
+  image:
+    repository: kafkafrauddetection-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  ports:
+    http: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    corsOrigins: "http://localhost:3000"
+
+# -- Redpanda (Kafka-compatible streaming)
+redpanda:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: redpandadata/redpanda
+    tag: latest
+    pullPolicy: IfNotPresent
+  ports:
+    kafka: 9092
+    admin: 9644
+    pandaproxy: 8082
+    rpc: 33145
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  storage:
+    size: 5Gi
+    storageClassName: ""
+
+# -- PostgreSQL database
+postgres:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+  port: 5432
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  storage:
+    size: 5Gi
+    storageClassName: ""
+
+# -- Redis cache
+redis:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: redis
+    tag: 7-alpine
+    pullPolicy: IfNotPresent
+  port: 6379
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+# -- Database credentials (override in production)
+secrets:
+  postgresUser: app
+  postgresPassword: app
+  postgresDb: fraud
+  redisUrl: "redis://{{ .Release.Name }}-redis:6379"
+
+# -- External infrastructure hosts (for hybrid mode)
+infra:
+  external: false
+  postgresHost: ""
+  redisHost: ""
+  redpandaHost: ""

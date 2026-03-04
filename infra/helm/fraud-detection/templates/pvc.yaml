@@ -1,0 +1,39 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-pg-data
+  labels:
+    app.kubernetes.io/name: fraud-detection
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.postgres.storage.storageClassName }}
+  storageClassName: {{ .Values.postgres.storage.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.storage.size }}
+{{- end }}
+---
+{{- if .Values.redpanda.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-redpanda-data
+  labels:
+    app.kubernetes.io/name: fraud-detection
+    app.kubernetes.io/component: redpanda
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.redpanda.storage.storageClassName }}
+  storageClassName: {{ .Values.redpanda.storage.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.redpanda.storage.size }}
+{{- end }}

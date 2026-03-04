@@ -1,0 +1,13 @@
+# Hybrid mode: infra on host Docker, apps in Minikube
+postgres:
+  enabled: false
+redis:
+  enabled: false
+redpanda:
+  enabled: false
+
+infra:
+  external: true
+  postgresHost: host.minikube.internal
+  redisHost: host.minikube.internal
+  redpandaHost: host.minikube.internal

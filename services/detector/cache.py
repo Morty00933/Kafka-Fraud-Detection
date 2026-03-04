@@ -1,7 +1,11 @@
 from __future__ import annotations
 import asyncio
+import logging
 from typing import Optional
 import redis.asyncio as redis
+
+logger = logging.getLogger(__name__)
+
 
 class RedisCache:
     def __init__(self, host: str = "redis", port: int = 6379, db: int = 0, prefix: str = "fraud"):
@@ -17,18 +21,41 @@ class RedisCache:
             await self._client.aclose()
             self._client = None
 
-    async def set_flag(self, tx_id: str, ttl_sec: int = 24*3600):
-        await self._client.setex(f"{self._prefix}:{tx_id}", ttl_sec, "1")
+    async def _ensure_connected(self) -> redis.Redis:
+        """Ensure client exists, reconnect if needed."""
+        if self._client is None:
+            logger.warning("Redis client not connected, reconnecting...")
+            await self.connect()
+        return self._client  # type: ignore[return-value]
+
+    async def set_flag(self, tx_id: str, ttl_sec: int = 24 * 3600) -> None:
+        try:
+            client = await self._ensure_connected()
+            await client.setex(f"{self._prefix}:{tx_id}", ttl_sec, "1")
+        except Exception as exc:
+            logger.error("Redis set_flag failed for tx_id=%s: %s", tx_id, exc)
 
     async def is_flagged(self, tx_id: str) -> bool:
-        v = await self._client.get(f"{self._prefix}:{tx_id}")
-        return v is not None
+        try:
+            client = await self._ensure_connected()
+            v = await client.get(f"{self._prefix}:{tx_id}")
+            return v is not None
+        except Exception as exc:
+            logger.error("Redis is_flagged failed for tx_id=%s: %s", tx_id, exc)
+            return False
 
-    # для корректного закрытия при завершении event loop
+    async def ping(self) -> bool:
+        """Health check for Redis."""
+        try:
+            client = await self._ensure_connected()
+            return await client.ping()
+        except Exception:
+            return False
+
     async def __aenter__(self):
         await self.connect()
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
         await self.close()
-        await asyncio.sleep(0)  # дать шанс flush'у
+        await asyncio.sleep(0)

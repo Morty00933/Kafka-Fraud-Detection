@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM ghcr.io/astral-sh/uv:0.6-python3.11-bookworm-slim
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ ENV NO_PROXY=${NO_PROXY}
 
 # Ставим только Python-зависимости (все бинарные колёса)
 COPY services/detector/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir --only-binary=:all: --prefer-binary -r /app/requirements.txt
+RUN uv pip install --system -r /app/requirements.txt
 
 # Код
 COPY services/detector/ /app/

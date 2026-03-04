@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app.kubernetes.io/name: fraud-detection
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  # -- Kafka / Redpanda
+  KAFKA_BOOTSTRAP: {{ if .Values.infra.external }}{{ .Values.infra.redpandaHost }}{{ else }}{{ .Release.Name }}-redpanda{{ end }}:{{ .Values.redpanda.ports.kafka }}
+  TOPIC_TRANSACTIONS: {{ .Values.detector.env.topicTransactions | quote }}
+  # -- Detector
+  GROUP_ID: {{ .Values.detector.env.groupId | quote }}
+  HOST: {{ .Values.detector.env.host | quote }}
+  PORT: {{ .Values.detector.env.port | quote }}
+  PROMETHEUS_PORT: {{ .Values.detector.env.prometheusPort | quote }}
+  MODEL_STRATEGY: {{ .Values.detector.env.modelStrategy | quote }}
+  IF_CONTAMINATION: {{ .Values.detector.env.ifContamination | quote }}
+  IF_TREES: {{ .Values.detector.env.ifTrees | quote }}
+  IF_RETRAIN_EVERY: {{ .Values.detector.env.ifRetrainEvery | quote }}
+  IF_BUFFER_MAX: {{ .Values.detector.env.ifBufferMax | quote }}
+  # -- Producer
+  RATE_PER_SEC: {{ .Values.producer.env.ratePerSec | quote }}
+  # -- Postgres connection
+  POSTGRES_HOST: {{ if .Values.infra.external }}{{ .Values.infra.postgresHost }}{{ else }}{{ .Release.Name }}-postgres{{ end }}
+  POSTGRES_PORT: {{ .Values.postgres.port | quote }}
+  # -- Redis connection
+  REDIS_HOST: {{ if .Values.infra.external }}{{ .Values.infra.redisHost }}{{ else }}{{ .Release.Name }}-redis{{ end }}
+  REDIS_PORT: {{ .Values.redis.port | quote }}
+  # -- API
+  CORS_ORIGINS: {{ .Values.api.env.corsOrigins | quote }}

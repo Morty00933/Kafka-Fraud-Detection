@@ -1,0 +1,33 @@
+{{- if .Values.redpanda.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-redpanda
+  labels:
+    app.kubernetes.io/name: fraud-detection
+    app.kubernetes.io/component: redpanda
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: kafka
+      port: {{ .Values.redpanda.ports.kafka }}
+      targetPort: kafka
+      protocol: TCP
+    - name: admin
+      port: {{ .Values.redpanda.ports.admin }}
+      targetPort: admin
+      protocol: TCP
+    - name: pandaproxy
+      port: {{ .Values.redpanda.ports.pandaproxy }}
+      targetPort: pandaproxy
+      protocol: TCP
+    - name: rpc
+      port: {{ .Values.redpanda.ports.rpc }}
+      targetPort: rpc
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: fraud-detection
+    app.kubernetes.io/component: redpanda
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
